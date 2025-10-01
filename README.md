@@ -130,6 +130,13 @@ docker run --rm -it offymarket-frontend-test npm run test:ci
 
 ---
 
+### 🌐 Servicios Publicos
+
+| Servicio | URL/Host                                       | Propósito                          |
+| -------- | ---------------------------------------------- | ---------------------------------- |
+| Backend | [Node JS]([http://localhost:8080](https://nodejs-backend-test-production.up.railway.app/posts)) | Acceso al servicio publico (NodeJs)            |
+| Frontend  | [React]([http://localhost:3001](https://react-front-test-eta.vercel.app/)) | Acceso al front publico |
+
 ## ❓Tips & Notas
 
 * Compose ya crea una red interna automáticamente; **no** necesitas `docker network create` cuando usas `docker compose`.
