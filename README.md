@@ -132,10 +132,10 @@ docker run --rm -it offymarket-frontend-test npm run test:ci
 
 ### 🌐 Servicios Publicos
 
-| Servicio | URL/Host                                       | Propósito                          |
+| Servicio | URL público                                       | Propósito                          |
 | -------- | ---------------------------------------------- | ---------------------------------- |
-| Backend | [Node JS]([http://localhost:8080](https://nodejs-backend-test-production.up.railway.app/posts)) | Acceso al servicio publico (NodeJs)            |
-| Frontend  | [React]([http://localhost:3001](https://react-front-test-eta.vercel.app/)) | Acceso al front publico |
+| Frontend | [[http://react-front-test-eta.vercel.app](https://react-front-test-eta.vercel.app/)] | Acceso a la app           |
+| Backend  | [[http://nodejs-backend-test-production.up.railway.app/posts](https://nodejs-backend-test-production.up.railway.app/posts)] | Acceso directo a la API |
 
 ## ❓Tips & Notas
 
