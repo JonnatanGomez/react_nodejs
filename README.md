@@ -8,7 +8,14 @@ Sistema mínimo distribuido con:
 ---
 
 ## ✨ Resumen Rápido
-- `docker compose up --build -d` ➜ levanta **todo**.
+# Primero ➜ levanta **todo**.
+```
+
+docker compose up --build -d 
+
+
+````
+
 - Frontend: http://localhost:8080  
 - Backend:  http://localhost:3001 (opcional, acceso directo a API)
 - Logs: `docker compose logs -f`  
