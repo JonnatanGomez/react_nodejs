@@ -18,49 +18,67 @@ const STOP_WORDS = new Set([
   'todo', 'toda', 'todos', 'todas', 'poco', 'poca', 'pocos', 'pocas', 'mucho', 'mucha', 'muchos', 'muchas', 'algún', 'alguna', 'algunos', 'algunas',
   'como', 'donde', 'cuando', 'que', 'cual', 'cuales', 'quien', 'quienes', 'cuyo', 'cuyas',
 ]);
-const groupAndCountPosts = (posts) => {
-  const userCounts = {};
-  const wordFrequency = {};
-  
 
-  /*
-  Recorre el objeto resultado del servicio , 
-  agrupa por usuario y cuenta las palabras
-  */
+const groupAndCountPosts = (posts) => {
+
+  const userAggregates = {};
+  
   posts.forEach(post => {
-    if (post.name && post.name.trim() !== '') {
-      const name = post.name;
-      userCounts[name] = (userCounts[name] || 0) + 1;
+    const name = post.name;
+
+    if (!name || name.trim() === '') return; // Ignorar posts sin nombre
+
+    if (!userAggregates[name]) {
+      userAggregates[name] = {
+        name: name,
+        postCount: 0,
+        lastCreatedAt: null, 
+        wordFrequency: {},  
+      };
     }
+
+    userAggregates[name].postCount += 1;
+    
+    const currentPostTime = new Date(post.createdAt).getTime();
+    if (!userAggregates[name].lastCreatedAt || 
+        currentPostTime > new Date(userAggregates[name].lastCreatedAt).getTime()) {
+      userAggregates[name].lastCreatedAt = post.createdAt;
+    }
+
     if (post.comment) {
       const words = post.comment
         .toLowerCase()
         .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "") // Eliminar puntuación
-        .split(/\s+/); // Dividir por espacios/saltos
+        .split(/\s+/) // Dividir por espacios/saltos
+        .filter(word => word.length > 2 && !STOP_WORDS.has(word)); // Filtrar palabras vacías y stop words
 
       words.forEach(word => {
-        // Ignorar si es un conector o una cadena vacía
-        if (word.length > 2 && !STOP_WORDS.has(word)) {
-          wordFrequency[word] = (wordFrequency[word] || 0) + 1;
-        }
+        const localFreq = userAggregates[name].wordFrequency;
+        localFreq[word] = (localFreq[word] || 0) + 1;
       });
     }
   });
 
-  // 3. Obtener las 5 Palabras Más Frecuentes
-  const sortedWords = Object.keys(wordFrequency)
-    .map(word => ({
-      word: word,
-      count: wordFrequency[word]
-    }))
-    .sort((a, b) => b.count - a.count) // Ordenar de mayor a menor
-    .slice(0, 5); // Tomar solo las 5 primeras
+  /*
+    Calcular el Top 5 para cada usuario.
+  */
+  return Object.values(userAggregates).map(userGroup => {
+    const sortedWords = Object.keys(userGroup.wordFrequency)
+      .map(word => ({
+        word: word,
+        count: userGroup.wordFrequency[word]
+      }))
+      .sort((a, b) => b.count - a.count) // Ordenar de mayor a menor
+      .slice(0, 5); // Tomar solo las 5 primeras (Top 5)
 
-  return Object.keys(userCounts).map(name => ({
-    name: name,
-    postCount: userCounts[name],
-    topWords: sortedWords 
-  }));
+    // 2b. Devolver el resultado con la estructura solicitada
+    return {
+      createdAt: userGroup.lastCreatedAt,
+      name: userGroup.name,
+      postCount: userGroup.postCount,
+      topWords: sortedWords,
+    };
+  });
 };
 
 export const getProcessedPosts = async () => {
@@ -71,6 +89,6 @@ export const getProcessedPosts = async () => {
     }
 
     const data = await response.json();
-    
+
     return groupAndCountPosts(data);
 };
