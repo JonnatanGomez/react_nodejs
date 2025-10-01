@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  # SERVICIO DE BACKEND (API REST de Node.js/Express)
+  backend:
+    container_name: offymarket_backend
+    build:
+      context: ./offymarket-backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      # AÑADIDO: Define la URL de la API externa que el backend debe consultar
+      EXTERNAL_API_URL: "https://687eade4efe65e5200875629.mockapi.io/api/v1/posts"
+    # El frontend accederá a este servicio usando el hostname 'backend' en el puerto 3001
+
+  # SERVICIO DE FRONTEND (Aplicación React/Nginx)
+  frontend:
+    container_name: offymarket_frontend
+    build:
+      context: ./offymarket-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+    # Nota: El frontend debe apuntar a la URL de la API: http://backend:3001/posts

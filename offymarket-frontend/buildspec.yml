@@ -1,0 +1,31 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Installing dependencies...
+      - npm ci
+  pre_build:
+    commands:
+      - echo Running frontend tests...
+      - npm test
+  build:
+    commands:
+      - echo Building the production bundle and Docker image...
+      - npm run build
+      #- ECR_URI=[ACCOUNT_ID_AWS].dkr.ecr.REGION.amazonaws.com/offymarket-frontend
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username $ECR_USER --password-stdin $ECR_URI
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=$COMMIT_HASH
+      - docker build -t $ECR_URI:latest .
+      - docker tag $ECR_URI:latest $ECR_URI:$IMAGE_TAG
+  post_build:
+    commands:
+      - echo Pushing to ECR...
+      - docker push $ECR_URI:latest
+      - docker push $ECR_URI:$IMAGE_TAG
+      - echo Writing imagedefinitions.json...
+      - printf '[{"name":"FRONTEND_CONTAINER_NAME","imageUri":"%s"}]' $ECR_URI:$IMAGE_TAG > imagedefinitions.json
+artifacts:
+  files:
+    - imagedefinitions.json
