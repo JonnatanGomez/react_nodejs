@@ -1,86 +1,136 @@
-🚀 OffyMarket Stack (Frontend & Backend)
-Este repositorio contiene la configuración de un sistema distribuido simple, compuesto por un Backend (Node.js/Express) que simula una API de datos y un Frontend (React/Vite/TailwindCSS) para visualizar y filtrar esa información.
-Todo el stack está configurado para ser ejecutado y gestionado mediante Docker y Docker Compose.
-Prerrequisitos
-Asegúrate de tener instalado en tu sistema:
-Docker Desktop (o Docker Engine)
-Docker Compose (generalmente viene incluido con Docker Desktop)
-1. Estructura del Proyecto
-El proyecto sigue esta estructura de directorios:
+# 🚀 OffyMarket Stack (Frontend & Backend)
+
+Sistema mínimo distribuido con:
+- **Backend:** Node.js + Express (API simulada de datos)
+- **Frontend:** React + Vite + TailwindCSS (UI con filtros)
+- Orquestado con **Docker** y **Docker Compose** 🐳
+
+---
+
+## ✨ Resumen Rápido
+- `docker compose up --build -d` ➜ levanta **todo**.
+- Frontend: http://localhost:8080  
+- Backend:  http://localhost:3001 (opcional, acceso directo a API)
+- Logs: `docker compose logs -f`  
+- Apagar/Limpiar: `docker compose down`
+
+---
+
+## 📦 Prerrequisitos
+- Docker Desktop / Docker Engine  
+- Docker Compose (incluido en Docker Desktop)
+
+---
+
+## 🗂️ Estructura del Proyecto
+```
+
 .
-├── offymarket-backend/
-│   ├── Dockerfile
-│   ├── package.json (Contiene el script "start")
-│   └── src/app.js (Archivo principal de la API)
-├── offymarket-frontend/
-│   ├── Dockerfile
-│   └── src/App.tsx (Contiene la lógica de conexión a la API)
-└── docker-compose.yml (Archivo maestro para la orquestación)
+├─ offymarket-backend/
+│  ├─ Dockerfile
+│  ├─ package.json      # incluye script "start"
+│  └─ src/app.js        # API principal
+├─ offymarket-frontend/
+│  ├─ Dockerfile
+│  └─ src/App.tsx       # lógica de conexión a la API
+└─ docker-compose.yml   # orquestación de servicios
 
+````
 
-2. Ejecución con Docker Compose (Método Recomendado)
-Este método es el más sencillo, ya que el archivo docker-compose.yml gestiona la construcción de ambas imágenes, la creación de la red interna y la inyección de variables de entorno.
-A. Construir y Levantar los Servicios
-Ejecuta este comando desde la raíz del proyecto para construir las imágenes y levantar ambos contenedores en segundo plano (-d):
+---
+
+## ▶️ Ejecución con Docker Compose (recomendado)
+El `docker-compose.yml` construye imágenes, crea la red y maneja variables de entorno.
+
+### A) Construir y levantar
+```bash
 docker compose up --build -d
+````
 
+### 🌐 Puertos
 
-Puerto / Host
-Servicio
-Propósito
-http://localhost:8080
-Frontend (Nginx)
-Acceso a la aplicación web (React).
-http://localhost:3001
-Backend (Node.js)
-Acceso directo a la API (Opcional).
+| Servicio | URL/Host                                       | Propósito                          |
+| -------- | ---------------------------------------------- | ---------------------------------- |
+| Frontend | [http://localhost:8080](http://localhost:8080) | Acceso a la app (React)            |
+| Backend  | [http://localhost:3001](http://localhost:3001) | Acceso directo a la API (opcional) |
 
-B. Ver los Logs
-Para ver los logs de ambos servicios en tiempo real (útil para verificar errores):
+### B) Ver logs (seguimiento en tiempo real)
+
+```bash
 docker compose logs -f
+```
 
+### C) Detener y limpiar
 
-C. Detener y Limpiar
-Para detener y eliminar todos los contenedores, la red y los volúmenes creados por docker compose:
+```bash
 docker compose down
+```
 
+---
 
-3. Construcción y Ejecución Individual de Imágenes
-Si deseas construir y ejecutar cada servicio por separado, sigue estos pasos:
-A. Construir Imágenes Individuales
-Ejecuta el comando docker build en el directorio de cada servicio:
-# 1. Construir el Backend
+## 🧩 Construcción y ejecución **individual**
+
+Si prefieres manejar cada servicio por separado:
+
+### A) Construir imágenes
+
+```bash
+# 1) Backend
 docker build -t offymarket-backend-app ./offymarket-backend
 
-# 2. Construir el Frontend
+# 2) Frontend
 docker build -t offymarket-frontend-app ./offymarket-frontend
+```
 
+> 💡 Si vas a correr contenedores sueltos, crea primero una red común:
 
-B.. Ejecutar Servicios Individuales
-Ejecuta cada contenedor, conectándolos a la red y exponiendo sus puertos.
-# 1. Ejecutar el Backend (debe recibir la variable de entorno)
+```bash
+docker network create offymarket-network
+```
+
+### B) Ejecutar contenedores
+
+```bash
+# 1) Backend (requiere EXTERNAL_API_URL)
 docker run -d --name backend-service \
   -p 3001:3001 \
   --network offymarket-network \
-  -e EXTERNAL_API_URL="[https://jsonplaceholder.typicode.com/posts](https://jsonplaceholder.typicode.com/posts)" \
+  -e EXTERNAL_API_URL="https://687eade4efe65e5200875629.mockapi.io/api/v1/posts" \
   offymarket-backend-app
 
-# 2. Ejecutar el Frontend
-# El Frontend debe usar la URL http://localhost:3001/posts internamente
+# 2) Frontend (consume http://localhost:3001/posts)
 docker run -d --name frontend-web \
   -p 8080:80 \
   --network offymarket-network \
   offymarket-frontend-app
+```
 
+---
 
-4. Correr Pruebas desde Contenedores (Asumiendo Scripts de Prueba)
-Si tu proyecto Node.js tiene un script de prueba definido en package.json (por ejemplo, "test": "jest"), puedes ejecutar las pruebas dentro de un contenedor sin necesidad de iniciar los servicios completos.
-A. Pruebas del Backend
-Usando la imagen previamente construida (offymarket-backend-app):
+## 🧪 Correr pruebas en contenedores*
+
+```bash
+# Backend
+docker build -t offymarket-backend-app --no-cache .
 docker run --rm offymarket-backend-app npm test
 
+# Frontend
+docker build -t offymarket-frontend-test --target builder . 
+docker run --rm -it offymarket-frontend-test npm run test:ci 
+```
 
---rm asegura que el contenedor sea eliminado inmediatamente después de que las pruebas terminen.
-B. Pruebas del Frontend
-Usando la imagen previamente construida (offymarket-frontend-app):
-docker run --rm offymarket-frontend-app npm test
+> `--rm` elimina el contenedor automáticamente al terminar ✅
+
+---
+
+## ❓Tips & Notas
+
+* Compose ya crea una red interna automáticamente; **no** necesitas `docker network create` cuando usas `docker compose`.
+* Verifica variables de entorno en el backend (p. ej. `EXTERNAL_API_URL`) según tu fuente de datos.
+* Si actualizas código, vuelve a construir con `--build`.
+
+---
+
+## 🧾 Licencia
+
+MIT — usa, modifica y comparte libremente.
